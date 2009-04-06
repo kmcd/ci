@@ -1,4 +1,46 @@
-DATASET = {'Lisa Rose'=> {'Lady in the Water'=> 2.5, 'Snakes on a Plane'=> 3.5,
+class Recommendation
+  include Math
+  
+  def self.euclidean_distance(person1, person2)
+    p1,p2         = DATASET[person1], DATASET[person2]
+    shared_movies = p1.keys.inject([]) {|r,m| r.push(m) if p2[m] }
+    
+    return 1 / (1 + shared_movies.inject(0.0) {|r,m| r += ((p1[m] - p2[m]) ** 2) } )
+  end
+  
+  # Returns a value between -1 and 1
+  def self.pearson_distance(person1, person2)
+    p1,p2 = DATASET[person1], DATASET[person2]
+    shared_movies = p1.keys.inject([]) {|r,m| r.push(m) if p2[m] }
+    
+    if shared_movies.size == 0
+      return 0
+    else
+      # Sum shared ratings
+      p1_prefs = shared_movies.inject(0.0) {|r,m| r += p1[m] }
+      p2_prefs = shared_movies.inject(0.0) {|r,m| r += p2[m] }
+      
+      # Sum square of shared ratings
+      p1_sq = shared_movies.inject(0.0) {|r,m| r += p1[m] ** 2 }
+      p2_sq = shared_movies.inject(0.0) {|r,m| r += p2[m] ** 2 }
+      
+      # Sum up the products
+      products = shared_movies.inject(0.0) {|r,m| r += p1[m] * p2[m] }
+        
+      # Calculate Pearson score
+      num = products - ( (p1_prefs * p2_prefs)/ shared_movies.size )
+      den = Math.sqrt( (p1_sq - (p1_prefs ** 2) / shared_movies.size) * ( p2_sq - (p2_prefs ** 2) / shared_movies.size ) )
+      den == 0 ? 0 : num/den
+    end
+  end
+  
+  # Takes 2 x,y points as as 2 arrays, eg sim_euclidean([3,6],[4,1])
+  def self.sim_euclidean(p1,p2)
+    1 / (1 + Math.sqrt( ((p1.first - p2.first) ** 2) + ((p2.last - p2.last) ** 2) ) )
+  end
+end
+
+Recommendation::DATASET = {'Lisa Rose'=> {'Lady in the Water'=> 2.5, 'Snakes on a Plane'=> 3.5,
  'Just My Luck'=> 3.0, 'Superman Returns'=> 3.5, 'You, Me and Dupree'=> 2.5,
  'The Night Listener'=> 3.0},
 'Gene Seymour'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 3.5,
@@ -15,27 +57,4 @@ DATASET = {'Lisa Rose'=> {'Lady in the Water'=> 2.5, 'Snakes on a Plane'=> 3.5,
 'Jack Matthews'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 4.0,
  'The Night Listener'=> 3.0, 'Superman Returns'=> 5.0, 'You, Me and Dupree'=> 3.5},
 'Keith'=> {'Snakes on a Plane'=>1.5,'You, Me and Dupree'=>3.0,'Superman Returns'=>1.0}
- } unless defined?(DATASET)
-
-class Recommendation
-  include Math
-  
-  def self.euclidean_distance(person1, person2)
-    p1,p2         = DATASET[person1], DATASET[person2]
-    shared_movies = p1.keys.inject([]) {|r,m| r.push(m) if p2[m] }
-    
-    # Euclidean distance
-    return 1 / (1 + shared_movies.inject(0.0) {|r,m| r += ((p1[m] - p2[m]) ** 2) } )
-  end
-  
-  def self.pearson_distance(person1, person2)
-    p1,p2 = DATASET[person1], DATASET[person2]
-    shared_movies = p1.keys.inject([]) {|r,m| r.push(m) if p2[m] }
-    
-  end
-  
-  # Takes 2 x,y points as as 2 arrays, eg sim_euclidean([3,6],[4,1])
-  def self.sim_euclidean(p1,p2)
-    1 / (1 + Math.sqrt( ((p1.first - p2.first) ** 2) + ((p2.last - p2.last) ** 2) ) )
-  end
-end
+ } unless defined?(Recommendation::DATASET)
