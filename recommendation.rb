@@ -43,6 +43,33 @@ class Recommendation
     matches[0...results]
   end
   
+  # Recommendation using weighted average of all other user's ratings
+  def self.recommend(person)
+    critic_sim = top_matches(person,DATASET.keys.size).reject {|c| c.last <= 0 }
+    
+    # Only score movies I haven't seen yet
+    movies = DATASET.map {|h| h[1].keys }.flatten.uniq.reject do |movie|
+      DATASET[person].keys.include? movie
+    end
+    
+    # Weight each movie ranking according to how similar the critic is to person
+    weighted_scores, sum_similarities = Hash.new(0), Hash.new(0)
+      
+    movies.each do |movie|
+      critic_sim.each do |critic|
+        if DATASET[critic.first][movie]
+          weighted_scores[movie]  += DATASET[critic.first][movie] * critic.last
+          sum_similarities[movie] += critic.last
+        end
+      end
+    end
+    
+    results = weighted_scores.map do |movie,score| 
+      [movie, score / sum_similarities[movie] ]
+    end
+    results.sort_by {|m| m.last }.reverse
+  end
+  
   # Takes 2 x,y points as as 2 arrays, eg sim_euclidean([3,6],[4,1])
   def self.sim_euclidean(p1,p2)
     1 / (1 + Math.sqrt( ((p1.first - p2.first) ** 2) + ((p2.last - p2.last) ** 2) ) )
