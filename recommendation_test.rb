@@ -17,6 +17,7 @@ Recommendation::DATASET = {'Lisa Rose'=> {'Lady in the Water'=> 2.5, 'Snakes on 
  'You, Me and Dupree'=> 2.0},
 'Jack Matthews'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 4.0,
  'The Night Listener'=> 3.0, 'Superman Returns'=> 5.0, 'You, Me and Dupree'=> 3.5},
+ 'Toby'=> {'Snakes on a Plane'=>4.5,'You, Me and Dupree'=>1.0,'Superman Returns'=>4.0},
 'Keith'=> {'Snakes on a Plane'=>1.5,'You, Me and Dupree'=>3.0,'Superman Returns'=>1.0}
 }
 
@@ -34,6 +35,13 @@ class RecommendationTest < Test::Unit::TestCase
   end
   
   def test_critic_ranking
+    expected_results = [["Lisa Rose", 0.99124070716193], ["Mick LaSalle", 0.924473451641905], ["Claudia Puig", 0.893405147441565]]
+    
+    expected_results.each_with_index do |expected,index|
+      results = Recommendation.top_matches('Toby')
+      assert_equal expected.first, results[index].first 
+      assert_in_delta expected.last, results[index].last, 0.0001
+    end
   end
   
   def test_movie_recommendation
