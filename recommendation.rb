@@ -47,7 +47,7 @@ class Recommendation
   def self.recommend(person)
     critic_sim = top_matches(person,DATASET.keys.size).reject {|c| c.last <= 0 }
     
-    # Only score movies I haven't seen yet
+    # Only score movies person hasn't seen yet
     movies = DATASET.map {|h| h[1].keys }.flatten.uniq.reject do |movie|
       DATASET[person].keys.include? movie
     end
@@ -64,6 +64,7 @@ class Recommendation
       end
     end
     
+    # Rank the results
     results = weighted_scores.map do |movie,score| 
       [movie, score / sum_similarities[movie] ]
     end
