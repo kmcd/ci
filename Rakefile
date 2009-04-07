@@ -1,5 +1,7 @@
 require 'rake'
 require 'rake/testtask'
+require 'rubygems'
+require 'redgreen'
 
 task :default => [:test]
 
