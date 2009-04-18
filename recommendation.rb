@@ -1,16 +1,27 @@
+# TODO: refactor rating hash to array of Rating objects/structs, eg
+Rating = Struct.new :critic, :item, :score
+Rating.new 'Keith', 'Superman Returns', 1.0
+Rating.new 'Keith', 'Snakes on a Plane', 1.5
+Rating.new 'Keith', 'You, Me and Dupree', 3.0
+
 class Recommendation
   include Math
+  attr_accessor :dataset
   
-  def self.euclidean_distance(person1, person2)
-    p1,p2         = DATASET[person1], DATASET[person2]
+  def initialize(data=nil)
+    @dataset = data
+  end
+  
+  def euclidean_distance(person1, person2)
+    p1,p2         = @dataset[person1], @dataset[person2]
     shared_movies = p1.keys.inject([]) {|r,m| r.push(m) if p2[m] }
     
     return 1 / (1 + shared_movies.inject(0.0) {|r,m| r += ((p1[m] - p2[m]) ** 2) } )
   end
   
   # Returns a value between -1 and 1
-  def self.pearson_distance(person1, person2)
-    p1,p2 = DATASET[person1], DATASET[person2]
+  def pearson_distance(person1, person2)
+    p1,p2 = @dataset[person1], @dataset[person2]
     shared_movies = p1.keys.inject([]) {|r,m| p2[m] ? r.push(m) : r }
     
     if shared_movies.size == 0
@@ -35,8 +46,8 @@ class Recommendation
   end
   
   # Returns an ordered list of people with similar tastes to the specified person:
-  def self.top_matches(person,results=3)
-    critics = DATASET.keys.map do |critic|
+  def similar_critics(person,results=3)
+    critics = @dataset.keys.map do |critic|
       [critic, pearson_distance(person, critic)] unless person == critic
     end
     matches = critics.compact.sort_by {|m| m.last }.reverse
@@ -44,12 +55,12 @@ class Recommendation
   end
   
   # Recommendation using weighted average of all other user's ratings
-  def self.recommend(person)
-    critic_sim = top_matches(person,DATASET.keys.size).reject {|c| c.last <= 0 }
+  def movies_for(person)
+    critic_sim = similar_critics(person,@dataset.keys.size).reject {|c| c.last <= 0 }
     
     # Only score movies person hasn't seen yet
-    movies = DATASET.map {|h| h[1].keys }.flatten.uniq.reject do |movie|
-      DATASET[person].keys.include? movie
+    movies = @dataset.map {|h| h[1].keys }.flatten.uniq.reject do |movie|
+      @dataset[person].keys.include? movie
     end
     
     # Weight each movie ranking according to how similar the critic is to person
@@ -57,8 +68,8 @@ class Recommendation
       
     movies.each do |movie|
       critic_sim.each do |critic|
-        if DATASET[critic.first][movie]
-          weighted_scores[movie]  += DATASET[critic.first][movie] * critic.last
+        if @dataset[critic.first][movie]
+          weighted_scores[movie]  += @dataset[critic.first][movie] * critic.last
           sum_similarities[movie] += critic.last
         end
       end
@@ -71,8 +82,23 @@ class Recommendation
     results.sort_by {|m| m.last }.reverse
   end
   
-  # Takes 2 x,y points as as 2 arrays, eg sim_euclidean([3,6],[4,1])
-  def self.sim_euclidean(p1,p2)
-    1 / (1 + Math.sqrt( ((p1.first - p2.first) ** 2) + ((p2.last - p2.last) ** 2) ) )
+  def movies_like(title)
+    # Invert critics & movies to find similar movies instead of critics
+    invert_dataset { similar_critics(title,@dataset.keys.size) }
+  end
+  
+  private
+  
+  # Inverts the dataset, yields to block then reverts dataset to original state
+  def invert_dataset
+    inverted_ratings = Hash.new {|hash, key| hash[key] = {} }
+    
+    @dataset.each do |person, ratings|
+      ratings.each {|item, rating| inverted_ratings[item][person] = rating }
+    end
+    
+    original_dataset, @dataset  = @dataset, inverted_ratings
+    results, @dataset           = yield, original_dataset
+    return results
   end
 end

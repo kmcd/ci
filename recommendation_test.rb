@@ -1,56 +1,52 @@
 require 'test/unit'
 require 'recommendation'
-
-Recommendation::DATASET = {'Lisa Rose'=> {'Lady in the Water'=> 2.5, 'Snakes on a Plane'=> 3.5,
- 'Just My Luck'=> 3.0, 'Superman Returns'=> 3.5, 'You, Me and Dupree'=> 2.5,
- 'The Night Listener'=> 3.0},
-'Gene Seymour'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 3.5,
- 'Just My Luck'=> 1.5, 'Superman Returns'=> 5.0, 'The Night Listener'=> 3.0,
- 'You, Me and Dupree'=> 3.5},
-'Michael Phillips'=> {'Lady in the Water'=> 2.5, 'Snakes on a Plane'=> 3.0,
- 'Superman Returns'=> 3.5, 'The Night Listener'=> 4.0},
-'Claudia Puig'=> {'Snakes on a Plane'=> 3.5, 'Just My Luck'=> 3.0,
- 'The Night Listener'=> 4.5, 'Superman Returns'=> 4.0,
- 'You, Me and Dupree'=> 2.5},
-'Mick LaSalle'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 4.0,
- 'Just My Luck'=> 2.0, 'Superman Returns'=> 3.0, 'The Night Listener'=> 3.0,
- 'You, Me and Dupree'=> 2.0},
-'Jack Matthews'=> {'Lady in the Water'=> 3.0, 'Snakes on a Plane'=> 4.0,
- 'The Night Listener'=> 3.0, 'Superman Returns'=> 5.0, 'You, Me and Dupree'=> 3.5},
- 'Toby'=> {'Snakes on a Plane'=>4.5,'You, Me and Dupree'=>1.0,'Superman Returns'=>4.0},
-'Keith'=> {'Snakes on a Plane'=>1.5,'You, Me and Dupree'=>3.0,'Superman Returns'=>1.0}
-}
+require 'yaml'
+require 'rubygems'
+require 'redgreen'
 
 # Results from Collective Intelligence, ch. 2, Segaran
 class RecommendationTest < Test::Unit::TestCase
-  def test_euclidean
+  def setup
+    @recommendation = Recommendation.new
+    @recommendation.dataset = open('movie_ratings.yml') {|f| YAML.load(f) }
+  end
+
+  def test_score_similarity_with_euclidean_distance
     assert_in_delta 0.1481,
-      Recommendation.euclidean_distance('Lisa Rose', 'Gene Seymour'),
+      @recommendation.euclidean_distance('Lisa Rose', 'Gene Seymour'),
       0.0001
   end
   
-  def test_pearson
+  def test_score_similarity_with_pearson_distance
     assert_in_delta 0.3960,
-      Recommendation.pearson_distance('Lisa Rose', 'Gene Seymour'),
+      @recommendation.pearson_distance('Lisa Rose', 'Gene Seymour'),
       0.0001
   end
   
-  def test_critic_ranking
+  def test_recommend_similar_critics
     assert_result_set(
       [["Lisa Rose", 0.9912], ["Mick LaSalle", 0.9244], ["Claudia Puig", 0.8934]],
-      Recommendation.top_matches('Toby') )
+      @recommendation.similar_critics('Toby') )
   end
   
-  def test_movie_recommendation
+  def test_recommend_movie_for_person
     assert_result_set( 
       [["The Night Listener", 3.3477], ["Lady in the Water", 2.8325], ["Just My Luck", 2.5309]],
-      Recommendation.recommend('Toby') )
+      @recommendation.movies_for('Toby') )
+  end
+  
+  def test_find_similar_movies
+    assert_result_set(
+      [["You, Me and Dupree", 0.6579], ["Lady in the Water", 0.4879], ["Snakes on a Plane", 0.1118], ["The Night Listener", -0.1798], ["Just My Luck", -0.4228]],
+      @recommendation.movies_like("Superman Returns") )
   end
 end
 
+# Takes a nested array of movies and scores and tests movie title and score
+# eg assert_result_set [["The Night Listener", 3.3477]], @recommendation.recommend('Foo')
 def assert_result_set(expected, actual)
   expected.each_with_index do |expected,index|
     assert_equal expected.first, actual[index].first 
-    assert_in_delta expected.last, actual[index].last, 0.0001
+    assert_in_delta expected.last, actual[index].last, 0.001
   end
 end
