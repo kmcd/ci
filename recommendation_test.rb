@@ -1,8 +1,8 @@
 require 'test/unit'
 require 'recommendation'
 require 'yaml'
-require 'rubygems'
-require 'redgreen'
+
+%w[ rubygems redgreen ].each {|lib| require lib } if __FILE__ == ARGV[0]
 
 # Results from Collective Intelligence, ch. 2, Segaran
 class RecommendationTest < Test::Unit::TestCase

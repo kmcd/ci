@@ -1,9 +1,3 @@
-# TODO: refactor rating hash to array of Rating objects/structs, eg
-Rating = Struct.new :critic, :item, :score
-Rating.new 'Keith', 'Superman Returns', 1.0
-Rating.new 'Keith', 'Snakes on a Plane', 1.5
-Rating.new 'Keith', 'You, Me and Dupree', 3.0
-
 class Recommendation
   include Math
   attr_accessor :dataset
@@ -103,5 +97,24 @@ class Recommendation
     original_dataset, @dataset  = @dataset, inverted_ratings
     results, @dataset           = yield, original_dataset
     return results
+  end
+end
+
+# TODO: refactor rating hash to array of Rating objects/structs, eg
+module Recommendable
+  Rating = Struct.new :critic, :item, :score
+  Result = Struct.new :item, :score
+  
+  Rating.new 'Keith', 'Superman Returns', 1.0
+  Rating.new 'Keith', 'Snakes on a Plane', 1.5
+  Rating.new 'Keith', 'You, Me and Dupree', 3.0
+  Result.new 'You, Me and Dupree', 1.324
+end
+
+class MovieRecommendation
+  include Recommendable
+  
+  def dataset
+    # read from CSV file or construct from nested array
   end
 end
