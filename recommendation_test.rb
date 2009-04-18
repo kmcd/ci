@@ -40,6 +40,12 @@ class RecommendationTest < Test::Unit::TestCase
       [["You, Me and Dupree", 0.6579], ["Lady in the Water", 0.4879], ["Snakes on a Plane", 0.1118], ["The Night Listener", -0.1798], ["Just My Luck", -0.4228]],
       @recommendation.movies_like("Superman Returns") )
   end
+  
+  def test_recommend_people_for_movie
+    assert_result_set(
+      [["Michael Phillips", 4.0], ["Jack Matthews", 3.0]], 
+      @recommendation.critics_for('Just My Luck') )
+  end
 end
 
 # Takes a nested array of movies and scores and tests movie title and score

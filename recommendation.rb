@@ -83,8 +83,11 @@ class Recommendation
   end
   
   def movies_like(title)
-    # Invert critics & movies to find similar movies instead of critics
     invert_dataset { similar_critics(title,@dataset.keys.size) }
+  end
+  
+  def critics_for(title)
+    invert_dataset { movies_for(title) }
   end
   
   private
