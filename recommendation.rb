@@ -84,6 +84,14 @@ class Recommendation
     invert_dataset { movies_for(title) }
   end
   
+  def similar_items
+    # Create a dictionary of items showing which other items they are most similar to.
+    result = {}
+    invert_dataset do
+      # Find the most similar items to this one
+    end
+  end
+  
   private
   
   # Inverts the dataset, yields to block then reverts dataset to original state
